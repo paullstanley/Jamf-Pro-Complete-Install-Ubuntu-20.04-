@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the root password
-root_password="jamf123456"
+root_password="root"
 
 # Step 1: Run apt update
 #sudo apt update
