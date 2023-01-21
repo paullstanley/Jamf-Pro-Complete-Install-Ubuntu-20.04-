@@ -39,23 +39,12 @@ sudo dpkg -i mysql-client_8.0.28-1ubuntu20.04_amd64.deb
 sudo dpkg -i mysql-community-server-core_8.0.28-1ubuntu20.04_amd64.deb
 sudo dpkg -i mysql-community-server_8.0.28-1ubuntu20.04_amd64.deb
 
+# Step 7: Start MySQL as service
+sudo systemctl daemon-reload
+sudo systemctl start mysql.service
 
-
-# Step 7: Create a new MySQL service file
-#udo echo "# MySQL 8.0.28 service file
-#[Unit]
-#Description=MySQL 8.0.28 Community Server
-#After=network.target
-
-#[Service]
-#User=mysql
-#Group=mysql
-#ExecStart=/usr/sbin/mysqld --defaults-file=/etc/mysql/my.cnf
-#Restart=on-failure
-
-#[Install]
-#WantedBy=multi-user.target" >> /etc/systemd/system/mysql.service
-
-# Step 6: Reload systemd and start the new service
-#sudo systemctl daemon-reload
-#sudo systemctl start mysql
+# Step 8: Stop MySQL from auto-updating
+sudo apt-mark hold mysql-server
+sudo apt-mark hold mysql-common
+sudo apt-mark hold mysql-server-core-*
+sudo apt-mark hold mysql-client-core-*
