@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Set the root password
-root_password="root"
+root_password="jamf123456"
 
 # Step 1: Run apt update
-sudo apt update
+#sudo apt update
 
 # Step 2: Download MySQL 8.0.28
 cd /tmp
@@ -19,10 +19,14 @@ yes
 EOF
 
 # Step 5: Set the root password in debconf
+sudo echo "UNREGISTER mysql-community-server/data-dir" | sudo debconf-communicate mysql-community-server
+
 export DEBIAN_FRONTEND="noninteractive"
+
 sudo echo "mysql-community-server mysql-community-server/root-pass password $root_password" | sudo debconf-set-selections
 sudo echo "mysql-community-server mysql-community-server/re-root-pass password $root_password" | sudo debconf-set-selections
 sudo echo "mysql-community-server mysql-community-server/new-auth-types select Ok" | sudo debconf-set-selections
+sudo echo "mysql-community-server mysql-server/default-auth-override select Use Legacy Authentication Method (Retain MySQL 5.x Compatibility)" | sudo debconf-set-selections
 sudo echo "mysql-community-server mysql-community-server/default-auth-override select Use Legacy Authentication Method (Retain MySQL 5.x Compatibility)" | sudo debconf-set-selections
 
 
@@ -35,7 +39,7 @@ sudo dpkg -i mysql-client_8.0.28-1ubuntu20.04_amd64.deb
 sudo dpkg -i mysql-community-server-core_8.0.28-1ubuntu20.04_amd64.deb
 sudo dpkg -i mysql-community-server_8.0.28-1ubuntu20.04_amd64.deb
 
-# TODO: mysql-community-server install stops at the authentication choice.
+
 
 # Step 7: Create a new MySQL service file
 #udo echo "# MySQL 8.0.28 service file
