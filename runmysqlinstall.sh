@@ -1,9 +1,11 @@
 #!/bin/bash
 
 # Installs pre-requsite software for Jamf on-prem server running on Ubuntu 20.04
-# If using a newly created virtual machine or recently restored snapshot, 
+# If using a newly created virtual machine or newly resored snapshot, 
 # please allow sufficient time for those processes to finish before attempting
 # to run this script(Usually this takes a few minutes).
+
+# INSTRUCTIONS: Make Sure you have the Jamf Pro manual install file(ROOT.war) in your /tmp directory before runnng the script.
 
 # Set the root password
 root_password="root"
@@ -61,46 +63,64 @@ sudo apt-mark hold mysql-common
 sudo apt-mark hold mysql-server-core-*
 sudo apt-mark hold mysql-client-core-*
 
-# Step 11: Create group and user for Apache Tomcat
+# Step 11: Configure MySQL database and user for Tomcat
+mysql -u root -proot << EOF
+# Create database
+CREATE DATABASE jamfsoftware;
+CREATE USER 'jamfsoftware'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+GRANT ALL ON jamfsoftware.* to 'jamfsoftware'@'localhost';
+EOF
+
+# Step 12: Create group and user for Apache Tomcat
 sudo groupadd tomcat
 sudo useradd -r -g tomcat -d /opt/apache-tomcat-8.5.42 -s /bin/nologin tomcat
 
-# Step 12: Create temporary directory for the download and move to that directory
+# Step 13: Create temporary directory for the download and move to that directory
 mkdir /tmp/tomcat && cd /tmp/tomcat
 
-# Step 13: Download Apache Tomcat & verify the file
+# Step 14: Download Apache Tomcat & verify the file
 wget https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.84/bin/apache-tomcat-8.5.84.tar.gz
 wget https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.84/bin/apache-tomcat-8.5.84.tar.gz.sha512
 sha512sum -c apache-tomcat-8.5.84.tar.gz.sha512
 
-# Step 14: Exit script if file cannot be verified
+# Step 15: Exit script if file cannot be verified
 if [ "apache-tomcat-8.5.84.tar.gz: OK" ]; then
     echo "Package integrity is valid, continuing with script..."
 
-# Step 15: Extract the Apache Tomcat Package and move it to /opt/
+# Step 16: Extract the Apache Tomcat Package and move it to /opt/
     sudo tar -zxvf apache-tomcat-8.5.84.tar.gz
     sudo mv apache-tomcat-8.5.84 /opt/
 
-# Step 16: Give ownership of the directory to tomcat
+# Step 17: Give ownership of the directory to tomcat
     sudo chown -R tomcat:tomcat /opt/apache-tomcat-8.5.84
 
-# Step 17: Create a system link to the tomcat directory 
+# Step 18: Create a system link to the tomcat directory 
     sudo ln -s /opt/apache-tomcat-8.5.84 /opt/tomcat
 
-# Step 18: Create the file and insert the unit failed
+# Step 19: Create the file and insert the unit failed
     sudo echo -e "[Unit]\n    Description=Jamf Pro Web Application Container\n    Wants=network.target\n    After=syslog.target network.target\n\n    [Service]\n    Type=forking\n\n    Environment=JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64\n    Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid\n    Environment=CATALINA_HOME=/opt/tomcat\n    Environment=CATALINA_BASE=/opt/tomcat\n    Environment='CATALINA_OPTS=-server -XX:+UseParallelGC'\n    Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.net.preferIPv4Stack=true'\n\n    ExecStart=/opt/tomcat/bin/startup.sh\n    ExecStop=/opt/tomcat/bin/shutdown.sh\n\n    User=tomcat\n    Group=tomcat\n    UMask=0007\n    RestartSec=10\n    Restart=always\n\n    [Install]\n    WantedBy=multi-user.target" | sudo tee -a "/etc/systemd/system/tomcat.service"
 
-# Step 19: Reload the system daemon
+    sudo rm -rf /opt/apache-tomcat-8.5.84/webapps/ROOT/
+    sudo mv /tmp/ROOT.war /opt/apache-tomcat-8.5.84/webapps/
+
+# Step 20: Reload the system daemon
     sudo systemctl daemon-reload
 
-# Step 20: Start the tomcat service
+# Step 21: Start the tomcat service
     sudo systemctl start tomcat
-
-# Step 21: Check the status of the tomcat service
-    sudo systemctl status tomcat
 
 # Step 22: Enable auto startup of the Tomcat service at boot
     sudo systemctl enable tomcat
+
+# Step 23: Remove the default ROOT folder from Tomcat directory and move ROOT.war in the Tomcat directory
+    sleep 10
+    #sudo systemctl start tomcat
+
+# Step 24: Edit Tomecat's DataBase.xml file with the MySQL user credentials
+    sudo sed -i 's/jamfsw03/password/g' "/opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml"
+
+# Step 25: Restart Tomcat
+    sudo systemctl restart tomcat
 
 else
     echo "Package integrity check failed, exiting script..."
