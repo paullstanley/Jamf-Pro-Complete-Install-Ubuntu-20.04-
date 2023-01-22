@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Installs pre-requsite software for Jamf on-prem server running on Ubuntu 20.04
-# If using a newly created virtual machine or newly resored snapshot, 
+# If using a newly created virtual machine or recently restored snapshot, 
 # please allow sufficient time for those processes to finish before attempting
 # to run this script(Usually this takes a few minutes).
 
