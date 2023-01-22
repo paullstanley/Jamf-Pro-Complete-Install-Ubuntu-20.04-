@@ -87,22 +87,19 @@ if [ "apache-tomcat-8.5.84.tar.gz: OK" ]; then
 # Step 17: Create a system link to the tomcat directory 
     sudo ln -s /opt/apache-tomcat-8.5.84 /opt/tomcat
 
-# Step 18: Create the file and insert the unit file
-    sudo cat > /etc/systemd/system/tomcat.service
-    echo -e "[Unit]\n    Description=Jamf Pro Web Application Container\n    Wants=network.target\n    After=syslog.target network.target\n\n    [Service]\n    Type=forking\n\n    Environment=JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64\n    Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid\n    Environment=CATALINA_HOME=/opt/tomcat\n    Environment=CATALINA_BASE=/opt/tomcat\n    Environment='CATALINA_OPTS=-server -XX:+UseParallelGC'\n    Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.net.preferIPv4Stack=true'\n\n    ExecStart=/opt/tomcat/bin/startup.sh\n    ExecStop=/opt/tomcat/bin/shutdown.sh\n\n    User=tomcat\n    Group=tomcat\n    UMask=0007\n    RestartSec=10\n    Restart=always\n\n    [Install]\n    WantedBy=multi-user.target" | sudo tee -a "/etc/systemd/system/tomcat.service"
+# Step 18: Create the file and insert the unit failed
+    sudo echo -e "[Unit]\n    Description=Jamf Pro Web Application Container\n    Wants=network.target\n    After=syslog.target network.target\n\n    [Service]\n    Type=forking\n\n    Environment=JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64\n    Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid\n    Environment=CATALINA_HOME=/opt/tomcat\n    Environment=CATALINA_BASE=/opt/tomcat\n    Environment='CATALINA_OPTS=-server -XX:+UseParallelGC'\n    Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.net.preferIPv4Stack=true'\n\n    ExecStart=/opt/tomcat/bin/startup.sh\n    ExecStop=/opt/tomcat/bin/shutdown.sh\n\n    User=tomcat\n    Group=tomcat\n    UMask=0007\n    RestartSec=10\n    Restart=always\n\n    [Install]\n    WantedBy=multi-user.target" | sudo tee -a "/etc/systemd/system/tomcat.service"
+
 # Step 19: Reload the system daemon
     sudo systemctl daemon-reload
 
-# Step 20: Enable the tomcat service
-    sudo systemctl enable tomcat.service
+# Step 20: Start the tomcat service
+    sudo systemctl start tomcat
 
-# Step 21: Start the tomcat service
-    sudo systemctl start tomcat.service
+# Step 21: Check the status of the tomcat service
+    sudo systemctl status tomcat
 
-# Step 22: Check the status of the tomcat service
-    sudo systemctl status tomcat.service
-
-# Step 23: Enable auto startup of the Tomcat service at boot
+# Step 22: Enable auto startup of the Tomcat service at boot
     sudo systemctl enable tomcat
 
 else
