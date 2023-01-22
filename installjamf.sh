@@ -11,10 +11,14 @@
 
 # Instructions: 
 # Make Sure you have the Jamf Pro manual install file(ROOT.war) in your /tmp directory before runnng the script.
+# This directory can be modified by changing the root_war_dir variable.
 
 # Customize the installation here
+root_war_dir='/tmp'
+
 root_user='root'
 root_password='root'
+
 jamf_database_name='jamfsoftware'
 jamf_database_user='jamfsoftware'
 jamf_user_host='localhost'
@@ -109,7 +113,7 @@ if [ "apache-tomcat-8.5.84.tar.gz: OK" ]; then
     sudo echo -e "[Unit]\n    Description=Jamf Pro Web Application Container\n    Wants=network.target\n    After=syslog.target network.target\n\n    [Service]\n    Type=forking\n\n    Environment=JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64\n    Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid\n    Environment=CATALINA_HOME=/opt/tomcat\n    Environment=CATALINA_BASE=/opt/tomcat\n    Environment='CATALINA_OPTS=-server -XX:+UseParallelGC'\n    Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.net.preferIPv4Stack=true'\n\n    ExecStart=/opt/tomcat/bin/startup.sh\n    ExecStop=/opt/tomcat/bin/shutdown.sh\n\n    User=tomcat\n    Group=tomcat\n    UMask=0007\n    RestartSec=10\n    Restart=always\n\n    [Install]\n    WantedBy=multi-user.target" | sudo tee -a "/etc/systemd/system/tomcat.service"
 
     sudo rm -rf /opt/apache-tomcat-8.5.84/webapps/ROOT/
-    sudo mv /tmp/ROOT.war /opt/apache-tomcat-8.5.84/webapps/
+    sudo mv "$root_war_dir/ROOT.war" /opt/apache-tomcat-8.5.84/webapps/
 
 # Step 20: Reload the system daemon
     sudo systemctl daemon-reload
