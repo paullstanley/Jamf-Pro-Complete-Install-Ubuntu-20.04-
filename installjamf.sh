@@ -1,14 +1,24 @@
 #!/bin/bash
 
+# Title: installjamf.sh
+# Author: Paull Stanley
+
+# Description:
 # Installs pre-requsite software for Jamf on-prem server running on Ubuntu 20.04
 # If using a newly created virtual machine or newly resored snapshot, 
 # please allow sufficient time for those processes to finish before attempting
 # to run this script(Usually this takes a few minutes).
 
-# INSTRUCTIONS: Make Sure you have the Jamf Pro manual install file(ROOT.war) in your /tmp directory before runnng the script.
+# Instructions: 
+# Make Sure you have the Jamf Pro manual install file(ROOT.war) in your /tmp directory before runnng the script.
 
-# Set the root password
-root_password="root"
+# Customize the installation here
+root_user='root'
+root_password='root'
+jamf_database_name='jamfsoftware'
+jamf_database_user='jamfsoftware'
+jamf_user_host='localhost'
+jamf_database_password='password'
 
 # Step 1: Run apt update
 sudo apt update
@@ -64,12 +74,10 @@ sudo apt-mark hold mysql-server-core-*
 sudo apt-mark hold mysql-client-core-*
 
 # Step 11: Configure MySQL database and user for Tomcat
-mysql -u root -proot << EOF
-# Create database
-CREATE DATABASE jamfsoftware;
-CREATE USER 'jamfsoftware'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
-GRANT ALL ON jamfsoftware.* to 'jamfsoftware'@'localhost';
-EOF
+mysql -u $root_user -p$root_password -e "CREATE DATABASE $jamf_database_name;"
+mysql -u $root_user -p$root_password -e "CREATE USER '$jamf_database_user'@'$jamf_user_host' IDENTIFIED WITH mysql_native_password BY '$jamf_database_password';"
+mysql -u $root_user -p$root_password -e "GRANT ALL ON $jamf_database_name.* to '$jamf_database_user'@'$jamf_user_host';"
+
 
 # Step 12: Create group and user for Apache Tomcat
 sudo groupadd tomcat
@@ -112,12 +120,15 @@ if [ "apache-tomcat-8.5.84.tar.gz: OK" ]; then
 # Step 22: Enable auto startup of the Tomcat service at boot
     sudo systemctl enable tomcat
 
-# Step 23: Remove the default ROOT folder from Tomcat directory and move ROOT.war in the Tomcat directory
+# Step 23: Wait for the ROOT.war file to unpack
     sleep 10
-    #sudo systemctl start tomcat
 
 # Step 24: Edit Tomecat's DataBase.xml file with the MySQL user credentials
-    sudo sed -i 's/jamfsw03/password/g' "/opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml"
+    sudo sed -i "s|<ServerName>.*</ServerName>|<ServerName>$jamf_user_host</ServerName>|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml
+    sudo sed -i "s|<DataBaseName>.*</DataBaseName>|<DataBaseName>$jamf_database_name</DataBaseName>|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml
+    sudo sed -i "s|<DataBaseUser>.*</DataBaseUser>|<DataBaseUser>$jamf_database_user</DataBaseUser>|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml
+    sudo sed -i "s|<DataBasePassword>.*</DataBasePassword>|<DataBasePassword>$jamf_database_password</DataBasePassword>|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml
+    
 
 # Step 25: Restart Tomcat
     sudo systemctl restart tomcat
