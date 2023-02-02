@@ -24,6 +24,8 @@ jamf_database_user='jamfsoftware'
 jamf_user_host='localhost'
 jamf_database_password='password'
 
+jamf_log_files_dir='/usr/local/jss/logs'
+
 # Step 1: Run apt update
 sudo apt update
 
@@ -127,16 +129,30 @@ if [ "apache-tomcat-8.5.84.tar.gz: OK" ]; then
 # Step 23: Wait for the ROOT.war file to unpack
     sleep 10
 
-# Step 24: Edit Tomecat's DataBase.xml file with the MySQL user credentials
+# Step 24: Edit Tomcat's DataBase.xml file with the MySQL user credentials
     sudo sed -i "s|<ServerName>.*</ServerName>|<ServerName>$jamf_user_host</ServerName>|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml
     sudo sed -i "s|<DataBaseName>.*</DataBaseName>|<DataBaseName>$jamf_database_name</DataBaseName>|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml
     sudo sed -i "s|<DataBaseUser>.*</DataBaseUser>|<DataBaseUser>$jamf_database_user</DataBaseUser>|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml
     sudo sed -i "s|<DataBasePassword>.*</DataBasePassword>|<DataBasePassword>$jamf_database_password</DataBasePassword>|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/xml/DataBase.xml
+
+# Step 25: Edit log4j2.xml file top change logging file to directory that has user permissions
+# log4j2.xml location: /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/classes
+    sudo sed -i "s/\/Library\/JSS\/Logs\//\$jamf_log_files_dir//g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/classes/log4j2.xml
     
 
-# Step 25: Restart Tomcat
+# Step 26: Restart Tomcat
     sudo systemctl restart tomcat
 
+# Step 27: Print success message
+    echo "Jamf pro has been successfully installed"
+
+# Step 28:  Check if a GUI is present and if so, open the Jamf instance in a web browser
+    if [ -z "$DISPLAY" ]; then
+        echo "Navigate to the Jamf Instance URL to begin setup"
+    else
+        sudo apt install xdg-utils
+        xdg-open "http://localhost:8080"
+    fi
 else
     echo "Package integrity check failed, exiting script..."
     exit 1
