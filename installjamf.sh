@@ -24,7 +24,7 @@ jamf_database_user='jamfsoftware'
 jamf_user_host='localhost'
 jamf_database_password='password'
 
-jamf_log_files_dir='/usr/local/jss/logs'
+jamf_log_files_dir='/usr/local/JSS/Logs/'
 
 # Step 1: Run apt update
 sudo apt update
@@ -137,7 +137,7 @@ if [ "apache-tomcat-8.5.84.tar.gz: OK" ]; then
 
 # Step 25: Edit log4j2.xml file top change logging file to directory that has user permissions
 # log4j2.xml location: /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/classes
-    sudo sed -i "s/\/Library\/JSS\/Logs\//\$jamf_log_files_dir//g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/classes/log4j2.xml
+    sudo sed -i "s|/Library/JSS/Logs/|$jamf_log_files_dir|g" /opt/apache-tomcat-8.5.84/webapps/ROOT/WEB-INF/classes/log4j2.xml
     
 
 # Step 26: Restart Tomcat
